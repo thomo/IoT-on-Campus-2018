@@ -1,0 +1,68 @@
+---
+
+# Bootstraping a new Raspberry Pi
+
+- hosts: newhosts
+  become: True
+  vars:
+    ansible_user: pi
+
+  tasks:
+    - name: Set timezone
+      lineinfile:
+        dest: /etc/timezone
+        regexp: ^.*$
+        line: 'Europe/Berlin'
+      tags: [ 'raspiconfig' ]
+
+    - name: Enable locale definitions
+      lineinfile:
+        dest: /etc/locale.gen
+        regexp: "^# ({{item}}.*)$"
+        line: '\1'
+        backrefs: yes
+      with_items: ['de_DE ISO-8859-1' , 'de_DE.UTF-8', 'en_US.UTF-8' ]
+      tags: [ 'raspiconfig', 'locale' ]
+
+    - name: Generate locale files
+      command: /usr/sbin/locale-gen
+      tags: [ 'raspiconfig', 'locale' ]
+
+    - name: Set locale LANG env
+      command: /usr/sbin/update-locale LANG=en_US.UTF-8
+      tags: [ 'raspiconfig', 'locale' ]
+
+    - name: Remove packages not needed
+      apt: name={{ item }} state=absent purge=yes autoremove=yes
+      with_items: "{{ raspi_apt_unneeded_packages }}"
+      tags: [ 'cleanup' ]
+
+    - name: Delete demo and test files
+      file: path={{ item }} state=absent
+      with_items: "{{ stuff_to_remove }}"
+      tags: [ 'cleanup' ]
+
+    - name: Autoremove unused packages
+      command: apt-get -y autoremove
+      register: autoremove_output
+      changed_when: "'The following packages will be REMOVED' in autoremove_output.stdout"
+      tags: [ 'cleanup' ]
+
+    - name: Update APT package cache
+      apt: update_cache=yes
+      tags: [ 'apt' ]
+
+    - name: Upgrade APT to the lastest packages
+      apt: upgrade=safe
+      tags: [ 'apt' ]
+
+    - name: Add SSH authorized key for pi user
+      authorized_key: user=pi key="{{ lookup('file', '../files/raspberry.pub') }}"
+      tags: [ 'ssh' ]
+
+    - name: Disable xconsole output
+      replace:
+        dest: /etc/rsyslog.conf
+        regexp: '^# The named pipe /dev/xconsole.*\n(.*\n)*\s+.*\|/dev/xconsole\s*$'
+        replace: ''
+      tags: [ 'config' ]

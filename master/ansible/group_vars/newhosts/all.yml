@@ -1,0 +1,12 @@
+---
+
+raspiconfig_timezone: 'Europe/Berlin'
+
+raspi_apt_unneeded_packages:
+  - wolfram-engine
+  - penguinspuzzle
+  - libraspberrypi-doc
+
+stuff_to_remove:
+  - /home/pi/python_games
+  - /opt/vc/src/hello_pi/hello_video/test.h264

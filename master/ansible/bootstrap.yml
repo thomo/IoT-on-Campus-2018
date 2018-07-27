@@ -1,0 +1,6 @@
+---
+
+# Bootstraping a new Raspberry Pi
+# vim:ff=unix ts=2 sw=2 ai expandtab
+
+- import_playbook: playbooks/bootstrap.yml
