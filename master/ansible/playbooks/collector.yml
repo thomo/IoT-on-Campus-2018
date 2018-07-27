@@ -1,0 +1,56 @@
+---
+
+- hosts: collector
+  become: True
+  vars:
+    ansible_user: pi
+    ansible_ssh_private_key_file: ~/.ssh/iot_master
+
+  tasks:
+
+  - name: Add mosquitto repo key
+    apt_key:
+      url: http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+      state: present
+    tags: ['mosquitto'] 
+
+  - name: Add mosquitto repos
+    apt_repository:
+      repo: deb http://repo.mosquitto.org/debian stretch main
+      state: present
+    tags: ['mosquitto'] 
+
+  - name: Install mosquitto server 
+    apt: 
+      name: mosquitto
+      state: present
+    tags: ['mosquitto'] 
+
+  - name: Install mosquitto client
+    apt: 
+      name: mosquitto-clients
+      state: present
+    tags: ['mosquitto'] 
+
+  # passwd: campus2018  
+  - name: Secure mosquitto connection
+    copy:
+      src: ../files/mosquitto/passwd
+      dest: /etc/mosquitto/passwd
+      owner: root
+      group: root
+      mode: 0644
+    tags: ['mosquitto'] 
+  
+  - name: Set default options
+    copy:
+      src: ../files/mosquitto/default.conf
+      dest: /etc/mosquitto/conf.d/default.conf
+      owner: root
+      group: root
+      mode: 0644
+    tags: ['mosquitto'] 
+
+  - name: Start and enable mosquitto service
+    service: name=mosquitto state=started enabled=yes 
+    tags: [ 'service', 'mosquitto' ]

@@ -1,0 +1,23 @@
+---
+
+- name: apply base configuration to all nodes
+  hosts: all
+  become: True
+  vars:
+    ansible_user: pi
+    ansible_ssh_private_key_file: ~/.ssh/iot_master
+
+  tasks:
+  - name: Make us of TMPFS
+    mount:
+      path: "{{ item.path }}"
+      src: tmpfs
+      fstype: tmpfs
+      opts: "{{ item.opts }}"
+      state: present
+    with_items:
+      - { path: '/tmp', opts: 'defaults,noatime,nosuid,size=30m' }
+      - { path: '/var/tmp', opts: 'defaults,noatime,nosuid,size=30m' }
+      - { path: '/var/log', opts: 'defaults,noatime,nosuid,mode=0755,size=30m' }
+      - { path: '/var/spool/mqueue', opts: 'defaults,noatime,nosuid,mode=0700,gid=1001,size=30m' }
+    tags: ['fstab']

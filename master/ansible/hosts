@@ -3,3 +3,9 @@
 [prebootstrap]
 10.0.0.142
 
+[collector]
+10.0.0.142
+
+[viewer]
+10.0.0.142
+
