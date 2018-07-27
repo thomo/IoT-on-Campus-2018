@@ -3,4 +3,9 @@
 # Bootstraping a new Raspberry Pi
 # vim:ff=unix ts=2 sw=2 ai expandtab
 
-- import_playbook: playbooks/bootstrap.yml
+# executed for newhosts
+- import_playbook: playbooks/bootstrap-phase1.yml
+
+# executed for hosts ready to bootstrap (prebootstrap)
+- import_playbook: playbooks/bootstrap-phase2.yml
+

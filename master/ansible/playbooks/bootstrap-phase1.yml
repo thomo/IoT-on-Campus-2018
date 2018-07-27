@@ -1,6 +1,6 @@
 ---
 
-# Bootstraping a new Raspberry Pi
+# Bootstraping a new Raspberry Pi - phase 1
 
 - hosts: newhosts
   become: True
@@ -42,11 +42,9 @@
       with_items: "{{ stuff_to_remove }}"
       tags: [ 'cleanup' ]
 
-    - name: Autoremove unused packages
-      command: apt-get -y autoremove
-      register: autoremove_output
-      changed_when: "'The following packages will be REMOVED' in autoremove_output.stdout"
-      tags: [ 'cleanup' ]
+    - name: Remove dependencies that are no longer required
+      apt: autoremove=yes
+      tags: [ 'apt', 'cleanup' ]
 
     - name: Update APT package cache
       apt: update_cache=yes
@@ -57,7 +55,18 @@
       tags: [ 'apt' ]
 
     - name: Add SSH authorized key for pi user
-      authorized_key: user=pi key="{{ lookup('file', '../files/raspberry.pub') }}"
+      authorized_key: user=pi key="{{ lookup('file', '../files/iot_master.pub') }}"
+      tags: [ 'ssh' ]
+
+    - name: Disable password authentication for ssh
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "^{{ item.regexp }}"
+        line: "{{ item.line }}"
+        insertafter: "^#{{ item.regexp }}"
+      with_items:
+        - { regexp: 'PasswordAuthentication\s+', line: 'PasswordAuthentication no'}
+        - { regexp: 'ChallengeResponseAuthentication\s+', line: 'ChallengeResponseAuthentication no'}
       tags: [ 'ssh' ]
 
     - name: Disable xconsole output

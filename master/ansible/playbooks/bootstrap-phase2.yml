@@ -1,0 +1,30 @@
+---
+
+# Bootstraping a new Raspberry Pi - phase 2
+
+- hosts: prebootstrap
+  become: True
+  vars:
+    ansible_user: pi
+    ansible_ssh_private_key_file: ~/.ssh/iot_master
+
+  tasks:
+    - name: Change passwd for pi user
+      user: name=pi password={{ pi_password_hash }} state=present
+      tags: [ 'ssh' ]
+
+    - name: Reboot the PI ...
+      shell: "sleep 5 && reboot"
+      async: 1
+      poll: 0
+      when: not ansible_check_mode
+      tags: [ 'reboot' ]
+
+    - name: Wait for the reboot to complete ...
+      wait_for_connection:
+        connect_timeout: 20
+        sleep: 5
+        delay: 5
+        timeout: 300
+      when: not ansible_check_mode
+      tags: [ 'reboot' ]
