@@ -20,4 +20,12 @@
       - { path: '/var/tmp', opts: 'defaults,noatime,nosuid,size=30m' }
       - { path: '/var/log', opts: 'defaults,noatime,nosuid,mode=0755,size=30m' }
       - { path: '/var/spool/mqueue', opts: 'defaults,noatime,nosuid,mode=0700,gid=1001,size=30m' }
-    tags: ['fstab']
+    tags: [ 'base', 'fstab']
+
+  - name: Install base packages
+    apt: 
+      name: "{{ item }}"
+    loop:
+      - grep
+    tags: [ 'base' ]
+  
