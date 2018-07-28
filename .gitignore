@@ -1,3 +1,4 @@
 *.b#*
 *.s#*
 master/ansible/files/iot_master
+master/ansible/*.retry
