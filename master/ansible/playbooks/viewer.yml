@@ -7,3 +7,42 @@
     ansible_ssh_private_key_file: ~/.ssh/iot_master
 
   tasks:
+  - name: Install nodered server 
+    apt: 
+      name: nodered
+      state: present
+    tags: ['nodered'] 
+
+  - name: Install npm package manager for Node.js
+    apt: 
+      name: npm
+      state: present
+    tags: ['nodered'] 
+
+  - name: Install "node-red-admin" node.js package.
+    npm:
+      name: node-red-admin
+      global: yes
+    tags: ['nodered'] 
+
+  - name: Start and enable nodered service
+    service: name=nodered state=started enabled=yes 
+    tags: [ 'service', 'nodered' ]
+
+  - name: Install grafana server 
+    apt: 
+      deb: https://github.com/fg2it/grafana-on-raspberry/releases/download/v5.1.4/grafana_5.1.4_armhf.deb
+      state: present
+    tags: ['grafana'] 
+
+  - name: Start and enable grafana service
+    service: name=grafana-server state=started enabled=yes 
+    tags: [ 'service', 'grafana' ]
+
+  - name: Install nginx server 
+    apt: 
+      name: nginx
+      state: present
+    tags: ['nginx'] 
+
+
