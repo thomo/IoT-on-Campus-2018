@@ -10,7 +10,6 @@
         [prebootstrap]
         
 
-
 - (optional) update sshkey file
 
         :::sh
@@ -32,8 +31,10 @@
         the.ip.of.new.raspi
         
 
-- run playbook for prepared hosts - phase 2
-
+- rerun the bootstrap playbook for prepared hosts - phase 2
+        :::sh
+        ansible-playbook bootstrap.yml -i hosts --ask-pass
+        
 
 After running both phases 
 - ssh access is restricted to authorized key 

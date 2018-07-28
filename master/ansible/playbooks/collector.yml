@@ -12,12 +12,15 @@
     apt_key:
       url: http://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
       state: present
+    notify: update apt cache
     tags: ['mosquitto'] 
 
   - name: Add mosquitto repos
     apt_repository:
-      repo: deb http://repo.mosquitto.org/debian stretch main
+      repo: deb http://repo.mosquitto.org/debian {{ansible_distribution_release}} main
       state: present
+      update_cache: yes
+    notify: update apt cache
     tags: ['mosquitto'] 
 
   - name: Install mosquitto server 
@@ -40,7 +43,8 @@
       owner: root
       group: root
       mode: 0644
-    tags: ['mosquitto'] 
+    notify: reload mosquitto
+    tags: ['mosquitto', 'config'] 
   
   - name: Set default options
     copy:
@@ -49,8 +53,96 @@
       owner: root
       group: root
       mode: 0644
-    tags: ['mosquitto'] 
+    notify: reload mosquitto
+    tags: ['mosquitto', 'config'] 
 
   - name: Start and enable mosquitto service
     service: name=mosquitto state=started enabled=yes 
     tags: [ 'service', 'mosquitto' ]
+
+  - name: Add influxdata repo key
+    apt_key:
+      url: https://repos.influxdata.com/influxdb.key
+      state: present
+    notify: update apt cache
+    tags: ['influxdb', 'telegraf'] 
+
+  - name: Add influxdata repo 
+    apt_repository:
+      repo: deb https://repos.influxdata.com/debian {{ansible_distribution_release}} stable
+      state: present
+      update_cache: yes
+    notify: update apt cache
+    tags: ['influxdb', 'telegraf'] 
+
+  - name: Install influxdb server 
+    apt: 
+      name: influxdb
+    tags: [ 'influxdb' ]
+
+  - name: Install influxdb client 
+    apt: 
+      name: influxdb-client
+    tags: [ 'influxdb' ]
+
+  - name: Start and enable influxdb service
+    service: name=influxdb state=started enabled=yes 
+    tags: [ 'service', 'influxdb' ]
+
+  - name: Install telegraf
+    apt: 
+      name: telegraf
+    tags: [ 'telegraf' ]
+
+  - name: Start and enable telegraf service
+    service: name=telegraf state=started enabled=yes 
+    tags: [ 'service', 'telegraf' ]
+
+  - name: Install the Python Requests module
+    apt:
+      name: python-requests
+    tags: [ 'config', 'telegraf' ]
+    
+  - name: Install the Python Influxdb module
+    apt:
+      name: python-influxdb
+    tags: [ 'config', 'telegraf' ]
+    
+  - name: Create influx telegraf 4 weeks retention policy
+    influxdb_retention_policy:
+      hostname: localhost
+      database_name: "telegraf"
+      policy_name: autogen
+      duration: 4w
+      replication: 1
+      default: yes
+    tags: [ 'config', 'telegraf' ]
+
+  - name: Create influx telegraf forever retention policy
+    influxdb_retention_policy:
+      hostname: localhost
+      database_name: "telegraf"
+      policy_name: forever
+      duration: INF
+      replication: 1
+      default: no
+    tags: [ 'config', 'telegraf' ]
+
+  - name: Create cq_1h_* for telegraf db
+    influxdb_query:
+      hostname: localhost
+      database_name: "telegraf"
+      query: "CREATE CONTINUOUS QUERY cq_1h_{{ item }} ON telegraf RESAMPLE EVERY 1h BEGIN SELECT {{ item }}(*) AS cq INTO telegraf.forever.:MEASUREMENT FROM telegraf../.*/ GROUP BY time(60m), * END"
+    loop:
+      - min 
+      - mean
+      - max
+    tags: [ 'config', 'telegraf' ]
+  
+  handlers:
+  - name: reload mosquitto
+    service: name=mosquitto state=restarted
+
+  - name: update apt cache
+    apt:
+      update_cache: yes
