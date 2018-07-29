@@ -39,10 +39,28 @@
     service: name=grafana-server state=started enabled=yes 
     tags: [ 'service', 'grafana' ]
 
+  - name: Create/Update datasources file (provisioning)
+    copy:
+      dest: "/etc/grafana/provisioning/datasources/ansible.yml"
+      content: |
+        apiVersion: 1
+        delete_datasources: []
+        datasources: 
+        {{ grafana_datasources | to_nice_yaml }}
+      backup: false
+    become: true
+    notify: restart grafana
+    tags: [ 'config', 'grafana', 'grafana_config' ]
+
   - name: Install nginx server 
     apt: 
       name: nginx
       state: present
     tags: ['nginx'] 
 
-
+  handlers:
+  - name: restart grafana
+    become: true
+    service:
+      name: grafana-server
+      state: restarted

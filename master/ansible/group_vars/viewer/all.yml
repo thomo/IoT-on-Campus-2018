@@ -1,0 +1,21 @@
+---
+
+# Datasources to configure
+grafana_datasources: 
+  - name: "telegraf"
+    access: direct
+    basicAuth: false
+    database: telegraf
+    editable: false
+    type: influxdb
+    url: "http://localhost:8086"
+
+  - name: "campus"
+    access: direct
+    basicAuth: false
+    database: campus
+    editable: false
+    type: influxdb
+    url: "http://localhost:8086"
+
+
