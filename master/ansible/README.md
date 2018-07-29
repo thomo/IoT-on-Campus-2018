@@ -42,5 +42,11 @@ After running both phases
 
 # Run specific playbooks for influxdb, telegraf, mosquitto, nodered, grafana and nginx
 
-install routines based on https://gist.github.com/xoseperez/e23334910fb45b0424b35c422760cb87
+Note: _install routines based on https://gist.github.com/xoseperez/e23334910fb45b0424b35c422760cb87_
+
+- add ip of raspi to collector and viewer section in the hosts file
+- run onenode playbook
+  ```sh
+  ansible-playbook onenode.yml -i hosts
+  ```
 

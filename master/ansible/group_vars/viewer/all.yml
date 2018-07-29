@@ -1,9 +1,13 @@
 ---
 
+grafana_security:
+  admin_user: admin
+  admin_password: admin
+  
 # Datasources to configure
 grafana_datasources: 
   - name: "telegraf"
-    access: direct
+    access: proxy
     basicAuth: false
     database: telegraf
     editable: false
@@ -11,7 +15,7 @@ grafana_datasources:
     url: "http://localhost:8086"
 
   - name: "campus"
-    access: direct
+    access: proxy
     basicAuth: false
     database: campus
     editable: false

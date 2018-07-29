@@ -1,0 +1,9 @@
+---
+
+# Install collector and viewer on one raspi
+# vim:ff=unix ts=2 sw=2 ai expandtab
+
+- import_playbook: playbooks/base.yml
+- import_playbook: playbooks/collector.yml
+- import_playbook: playbooks/viewer.yml
+
