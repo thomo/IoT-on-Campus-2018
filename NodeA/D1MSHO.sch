@@ -7,7 +7,7 @@
 <setting keepoldvectorfont="yes"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="50" unitdist="mil" unit="mil" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
+<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" altdistance="0.01" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="no" active="no"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="no" active="no"/>
@@ -5394,32 +5394,25 @@ Source: http://www.mouser.com/ds/2/392/products_18-2245.pdf</description>
 <sheets>
 <sheet>
 <plain>
-<text x="228.6" y="99.06" size="1.778" layer="94">GPIO2</text>
-<text x="228.6" y="101.6" size="1.778" layer="94">GPIO0/!FLASH</text>
 <text x="27.94" y="101.6" size="1.778" layer="94" align="bottom-right">GPIO12/MISO</text>
 <text x="228.6" y="104.14" size="1.778" layer="94">GPIO4/SDA</text>
 <text x="228.6" y="106.68" size="1.778" layer="94">GPIO5/SCL</text>
-<text x="228.6" y="109.22" size="1.778" layer="94">RXD0</text>
-<text x="228.6" y="111.76" size="1.778" layer="94">TXD0</text>
 <text x="27.94" y="99.06" size="1.778" layer="94" align="bottom-right">GPIO13/MOSI/RXD2</text>
 <text x="27.94" y="104.14" size="1.778" layer="94" align="bottom-right">GPIO14/CLK</text>
-<text x="27.94" y="96.52" size="1.778" layer="94" align="bottom-right">GPIO15/CS/TXD2</text>
 <text x="27.94" y="106.68" size="1.778" layer="94" align="bottom-right">GPIO16/!WAKE</text>
-<text x="7.62" y="6.858" size="1.778" layer="94">SKU: D1MSHO</text>
-<text x="7.62" y="12.7" size="2.794" layer="94">SuperHouse Automation D1 Mini Shield Outline</text>
-<text x="81.28" y="6.858" size="1.778" layer="94">V1.1 (2016-03-08)</text>
-<text x="32.766" y="6.858" size="1.778" layer="94">www.superhouse.tv/d1msho</text>
+<text x="81.28" y="6.858" size="1.778" layer="94">V1.0 (2018-07-27)</text>
 <frame x1="5.08" y1="5.08" x2="109.22" y2="17.78" columns="0" rows="0" layer="94" border-left="no" border-top="no" border-right="no" border-bottom="no"/>
 <frame x1="78.74" y1="5.08" x2="109.22" y2="10.16" columns="8" rows="5" layer="94"/>
 <frame x1="5.08" y1="5.08" x2="30.48" y2="10.16" columns="8" rows="5" layer="94"/>
 <frame x1="0" y1="0" x2="248.92" y2="185.42" columns="8" rows="5" layer="94"/>
-<text x="27.94" y="109.22" size="1.778" layer="94" align="bottom-right">ADC/TOUT</text>
-<text x="7.62" y="25.4" size="1.778" layer="97">A0: Max input 3.3V (voltage divider on D1 Mini)
-D3: 10k pullup on D1 Mini
-D4: 10k pullup on D1 Mini
-D8: 10k pulldown on D1 Mini</text>
-<text x="55.88" y="96.52" size="1.778" layer="97">10k pulldown</text>
 <text x="7.62" y="20.32" size="1.778" layer="97">For full D1 Mini specs see http://www.wemos.cc/Products/d1_mini.html</text>
+<text x="22.86" y="12.7" size="2.54" layer="94">Wemos D1 Sensor/Actor board</text>
+<text x="104.14" y="63.5" size="1.778" layer="94">WS2812b RGB LED breakout connector
+DIN</text>
+<text x="175.26" y="63.5" size="1.778" layer="94">WS2812b RGB LED breakout connector
+DOUT - not connected
+(just to solder the pins)</text>
+<text x="142.24" y="104.14" size="1.778" layer="94">Sensor </text>
 </plain>
 <instances>
 <instance part="H1" gate="G$1" x="34.29" y="104.14" rot="MR180"/>
