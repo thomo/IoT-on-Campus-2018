@@ -1,3 +1,11 @@
+/*
+ * Used libraries
+ * - BME280 v2.3.0 by Tyler Glenn (https://github.com/finitespace/BME280)
+ * - FastLED v3.1.6 by Daniel Garcia (https://github.com/FastLED/FastLED)
+ * 
+ * to install: Sketch -> Include Library -> Manage Libraries -> Search 
+ */
+
 #include "FastLED.h"
 #include <BME280I2C.h>
 #include <Wire.h>
