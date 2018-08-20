@@ -1,3 +1,10 @@
+/*
+ * Used libraries
+ * - PubSubClient by Nick O'Leary 2.6.0 (https://pubsubclient.knolleary.net/)
+ * 
+ * to install: Sketch -> Include Library -> Manage Libraries -> Search 
+ */
+ 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 

@@ -1,3 +1,10 @@
+/*
+ * Used libraries
+ * - Adafruit Neopixel by Adafruit 1.1.6 (https://github.com/adafruit/Adafruit_NeoPixel)
+ * 
+ * to install: Sketch -> Include Library -> Manage Libraries -> Search 
+ */
+
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
   #include <avr/power.h>
