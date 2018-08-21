@@ -20,10 +20,9 @@ void setup() {
 
 void loop() {
   Serial.print("S1: ");
-  Serial.println(digitalRead(SW1_PIN));
+  Serial.print(digitalRead(SW1_PIN));
   Serial.print(" S2: ");
   Serial.println(digitalRead(SW2_PIN));
-  Serial.println(" ");
 
   if (digitalRead(SW1_PIN) || digitalRead(SW2_PIN)) {
     // enable LED
