@@ -13,7 +13,6 @@ const char* password = "";
 const char* mqtt_server = "";
 const char* mqtt_user = "tq";
 const char* mqtt_password = "campus2018";
-const char* clientId = "NodeB02";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -89,7 +88,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect(clientId, mqtt_user, mqtt_password)) {
+    if (client.connect(WiFi.macAddress().c_str(), mqtt_user, mqtt_password)) {
       Serial.println("connected");
       // ... and subscribe to one or more topics
       client.subscribe("ledStatus");
