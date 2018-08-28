@@ -25,7 +25,7 @@
 
 #include <PubSubClient.h>
 
-#define MY_DEBUG 1
+#define MY_DEBUG 0
 
 #define NUM_LEDS 2
 #define DATA_PIN D5
@@ -64,7 +64,7 @@ long lastMsgMillis = 0;
 
 //          1         2         3         4         5         6         7         8         9         0         1         2
 // 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
-// /campus/nodeA/sensor node=012345678901234567890 temp=-xx.xx,hum=100.00,press=10000.00,s0=x,s1=x,color=xxx,xxx,xxx
+// /campus/nodeA/sensors node=12345678901234567890 temp=-xx.xx,hum=100.00,press=100000.00,s0=x,s1=x,color=xxx,xxx,xxx
 #define MQTT_MSG_LEN 120
 char mqttMsg[MQTT_MSG_LEN];
 
@@ -206,6 +206,32 @@ void setupBME() {
   }
 }
 
+int splitColorString(char* color, char* buf) {
+  int idx = 0;
+  while ((color[idx] != ',') && (color[idx] != '\0')) {
+    buf[idx] = color[idx];
+    ++idx;
+  }
+  buf[idx] = '\0';
+  return idx;
+}
+
+void parseRGB(char* color, CRGB* rgb) {
+  int idx = 0;
+  char tmp[4];
+  
+  idx = idx + splitColorString(color, tmp);
+  rgb->r = atoi(tmp);
+
+  ++idx;
+  idx = idx + splitColorString(&color[idx], tmp);
+  rgb->g = atoi(tmp);
+  
+  ++idx;
+  idx = idx + splitColorString(&color[idx], tmp);
+  rgb->b = atoi(tmp);
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println();
@@ -235,8 +261,8 @@ void setup() {
     // will not reach this line - restart of Raspi is forced in runConfig() !!!
   }
   
-  leds[0] = LED_OFF;
-  leds[1] = LED_OFF;
+  parseRGB(cfg_color, &leds[0]);
+  parseRGB(cfg_color, &leds[1]);
 
   setupWiFi();
   setupMQTT();
@@ -259,6 +285,15 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   if (strcmp(topic,SUB_TOPIC)==0) {
     // content contains color of led 0 and led 1
     // adjust the color of leds accordingly
+    char cbuf[12];
+    strncpy(cbuf, &((char *)payload)[2], 12);
+    cbuf[min(11U,length-2)] = '\0';
+    
+    int idx = 1;
+    if (payload[0] == '1') idx = 0;
+    
+    parseRGB(cbuf, &leds[idx]);
+    FastLED.show();
   }
 }
 
@@ -301,8 +336,12 @@ void loop(void) {
     snprintf (mqttMsg, MQTT_MSG_LEN, 
               "sensors,node=%s temp=%.2f,hum=%.2f,press=%.2f,s0=%d,s1=%d,color=%s", 
               cfg_node_id, temp, hum, pres, digitalRead(SW0_PIN), digitalRead(SW1_PIN), cfg_color);
-    Serial.print("> ");
-    Serial.println(mqttMsg);
+    if (MY_DEBUG) {
+      Serial.print("> [");
+      Serial.print(PUB_TOPIC);
+      Serial.print("] ");
+      Serial.println(mqttMsg);
+    }
     mqttClient.publish(PUB_TOPIC, mqttMsg);
   }
 
