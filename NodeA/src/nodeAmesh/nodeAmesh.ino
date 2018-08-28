@@ -3,7 +3,8 @@
  * - BME280 v2.3.0 by Tyler Glenn (https://github.com/finitespace/BME280)
  * - FastLED v3.1.6 by Daniel Garcia (https://github.com/FastLED/FastLED)
  * - WifiManager v0.14.0 by tzapu (https://github.com/tzapu/WiFiManager)
- * - ArduinoJson v5.13.2 (!)
+ * - ArduinoJson v5.13.2 (! use this version)
+ * - PubSubClient by Nick O'Leary 2.6.0 (https://pubsubclient.knolleary.net/)
  * 
  * to install: Sketch -> Include Library -> Manage Libraries -> Search 
  */
@@ -22,101 +23,118 @@
 
 #include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson
 
+#include <PubSubClient.h>
+
+#define MY_DEBUG 1
+
 #define NUM_LEDS 2
 #define DATA_PIN D5
-#define SW1_PIN D6
-#define SW2_PIN D7
+#define SW0_PIN D6
+#define SW1_PIN D7
 
-#define BOOTSTRAP_SSID "IOT_NODE"
+#define DEFAULT_MQTT_SERVER "mqttbroker"
+#define DEFAULT_NODE_ID "white"
+#define DEFAULT_COLOR "255,255,255"
+
+#define SUB_TOPIC "/campus/feedback"
+#define PUB_TOPIC "/campus/nodeA"
+
+const char* mqtt_user = "tq";
+const char* mqtt_password = "campus2018";
+
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
 
 BME280I2C bme;
 
 CRGB leds[NUM_LEDS];
 
 const CRGB LED_OFF  = CRGB(0,0,0);
+const CRGB LED_RED  = CRGB(255,0,0);
 const CRGB LED_BLUE = CRGB(0,0,255);
 
 char cfg_node_id[20];
 char cfg_mqtt_server[40];
+char cfg_color[12];
 
 //flag for saving data
 bool shouldSaveConfig = false;
 
+long lastMsgMillis = 0;
+
+//          1         2         3         4         5         6         7         8         9         0         1         2
+// 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
+// /campus/nodeA/sensor node=012345678901234567890 temp=-xx.xx,hum=100.00,press=10000.00,s0=x,s1=x,color=xxx,xxx,xxx
+#define MQTT_MSG_LEN 120
+char mqttMsg[MQTT_MSG_LEN];
+
+// ------------------------------------------------------
+
 //callback notifying us of the need to save config
 void saveConfigCallback () {
-  Serial.println("mark config as to be saved");
   shouldSaveConfig = true;
 }
 
 void saveConfig () {
-  Serial.println("saving config");
-  
   DynamicJsonBuffer jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
   json["mqtt_server"] = cfg_mqtt_server;
   json["node_id"] = cfg_node_id;
+  json["color"] = cfg_color;
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
     Serial.println("failed to open config file for writing");
   } else {
-    json.printTo(Serial);
     json.printTo(configFile);
     configFile.close();
-    Serial.println("Saved!!!");
   }
   //end save
 }
 
 void loadConfig() {
   //read configuration from FS json
-  Serial.println("mounting FS...");
+  if (SPIFFS.exists("/config.json")) {
+    //file exists, reading and loading
+    Serial.println("reading config file");
+    File configFile = SPIFFS.open("/config.json", "r");
+    if (configFile) {
+      size_t size = configFile.size();
+      // Allocate a buffer to store contents of the file.
+      std::unique_ptr<char[]> buf(new char[size]);
 
-  if (SPIFFS.begin()) {
-    Serial.println("mounted file system");
-    if (SPIFFS.exists("/config.json")) {
-      //file exists, reading and loading
-      Serial.println("reading config file");
-      File configFile = SPIFFS.open("/config.json", "r");
-      if (configFile) {
-        Serial.println("opened config file");
-        size_t size = configFile.size();
-        // Allocate a buffer to store contents of the file.
-        std::unique_ptr<char[]> buf(new char[size]);
-
-        configFile.readBytes(buf.get(), size);
-        DynamicJsonBuffer jsonBuffer;
-        JsonObject& json = jsonBuffer.parseObject(buf.get());
+      configFile.readBytes(buf.get(), size);
+      DynamicJsonBuffer jsonBuffer;
+      JsonObject& json = jsonBuffer.parseObject(buf.get());
+      if (json.success()) {
+        strncpy(cfg_mqtt_server, json["mqtt_server"], 40);
+        strncpy(cfg_node_id, json["node_id"], 20);
+        strncpy(cfg_color, json["color"], 12);
+      } else {
+        Serial.println("Failed to load json config. Invalid?");
         json.printTo(Serial);
-        if (json.success()) {
-          Serial.println("\nparsed json");
-
-          strncpy(cfg_mqtt_server, json["mqtt_server"],40);
-          strncpy(cfg_node_id, json["node_id"],20);
-
-        } else {
-          Serial.println("failed to load json config");
-        }
-        configFile.close();
+        Serial.println("\n");
       }
-    } else {
-      Serial.println("config file not found!");
+      configFile.close();
     }
   } else {
-    Serial.println("failed to mount FS");
-  }  
+    Serial.println("config file not found!");
+  }
 }
 
 void runConfig() {
     // Local intialization. Once its business is done, there is no need to keep it around
     WiFiManager wifiManager;
+    wifiManager.setDebugOutput(false);
 
     // id/name, placeholder/prompt, default, length
-    WiFiManagerParameter custom_node_id("nid", "node id", cfg_node_id, 20);
     WiFiManagerParameter custom_mqtt_server("srv", "mqtt server", cfg_mqtt_server, 40);
+    WiFiManagerParameter custom_node_id("nid", "node id", cfg_node_id, 20);
+    WiFiManagerParameter custom_color("color", "color", cfg_color, 12);
 
-    wifiManager.addParameter(&custom_node_id);
     wifiManager.addParameter(&custom_mqtt_server);
+    wifiManager.addParameter(&custom_node_id);
+    wifiManager.addParameter(&custom_color);
     
     // set config save notify callback
     wifiManager.setSaveConfigCallback(saveConfigCallback);
@@ -130,17 +148,63 @@ void runConfig() {
     }
 
     // if you get here you have connected to the WiFi
-    Serial.println("connected...yeey :)");
+    Serial.println("connected ... :)");
 
     if (shouldSaveConfig) {
       // read updated parameters
-      strncpy(cfg_mqtt_server, custom_mqtt_server.getValue(),40);
-      strncpy(cfg_node_id, custom_node_id.getValue(),20);
+      strncpy(cfg_mqtt_server, custom_mqtt_server.getValue(), 40);
+      strncpy(cfg_node_id, custom_node_id.getValue(), 20);
+      strncpy(cfg_color, custom_color.getValue(), 12);
   
       saveConfig(); 
     }
 }
 
+void setupWiFi() {
+  Serial.println("Start WiFi Setup");
+
+  WiFi.persistent(false); // just store updated ssid/passwd values
+  WiFi.begin(); // connect using the ssid/passwd configured with wifi manager
+
+  int cnt = 0;
+  while (WiFi.status() != WL_CONNECTED && cnt < 10) {
+    ++cnt;
+    delay(500);
+    Serial.print(".");
+  }  
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\nERROR: WiFi connection failed!");
+    leds[0] = LED_RED;
+  }
+  Serial.println("----- ----- -----");
+}
+
+void setupMQTT()
+{
+  Serial.println("Start MQTT Setup");
+  mqttClient.setServer(cfg_mqtt_server, 1883);
+  mqttClient.setCallback(mqttCallback);
+}
+
+void setupBME() {
+  Wire.begin();
+
+  int cnt = 0;
+  while (!bme.begin() && cnt < 10) {
+    ++cnt;
+    Serial.println("Could not find BME280 sensor!");
+    delay(1000);
+  }
+
+  if (!bme.begin()) {
+    Serial.println("Could not find BME280 sensor! - Giving up :-(");
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -148,9 +212,20 @@ void setup() {
 
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
 
-  loadConfig();
+  // set default values
+  strncpy(cfg_mqtt_server, DEFAULT_MQTT_SERVER, 40);
+  strncpy(cfg_node_id, DEFAULT_NODE_ID, 20);
+  strncpy(cfg_color, DEFAULT_COLOR, 12);
+
+  if (!SPIFFS.begin()) {
+    Serial.println("failed to mount FS");
+  }
+
+  if (digitalRead(SW1_PIN) == HIGH) {
+    loadConfig();
+  }
   
-  if (digitalRead(SW1_PIN) == LOW) {
+  if (digitalRead(SW0_PIN) == LOW) {
     leds[0] = LED_BLUE;
     leds[1] = LED_BLUE;
     FastLED.show();
@@ -162,8 +237,73 @@ void setup() {
   
   leds[0] = LED_OFF;
   leds[1] = LED_OFF;
+
+  setupWiFi();
+  setupMQTT();
+  setupBME();
+  
   FastLED.show();
 }
 
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  if (MY_DEBUG) {
+    Serial.print("< [");
+    Serial.print(topic);
+    Serial.print("] ");
+    for (int i = 0; i < length; i++) {
+      Serial.print((char)payload[i]);
+    }
+    Serial.println();
+  }
+  
+  if (strcmp(topic,SUB_TOPIC)==0) {
+    // content contains color of led 0 and led 1
+    // adjust the color of leds accordingly
+  }
+}
+
+void mqttReconnect() {
+  // Loop until we're reconnected
+  while (!mqttClient.connected()) {
+    
+    Serial.print("Attempting MQTT connection ... ");
+    
+    // Attempt to connect
+    if (mqttClient.connect(WiFi.macAddress().c_str(), mqtt_user, mqtt_password)) {
+      Serial.println("connected");
+      mqttClient.subscribe(SUB_TOPIC);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqttClient.state());
+      Serial.println(" try again in some seconds");
+      delay(2000);       // Wait before retrying
+    }
+  }
+}
+
 void loop(void) {
+  if (!mqttClient.connected()) {
+    mqttReconnect();
+  }
+  mqttClient.loop();
+
+  long now = millis();
+  if (now - lastMsgMillis > 2000) {
+    lastMsgMillis = now;
+
+    float temp(NAN), hum(NAN), pres(NAN);
+
+    BME280::TempUnit tempUnit(BME280::TempUnit_Celsius);
+    BME280::PresUnit presUnit(BME280::PresUnit_Pa);
+
+    bme.read(pres, temp, hum, tempUnit, presUnit);
+    
+    snprintf (mqttMsg, MQTT_MSG_LEN, 
+              "sensors,node=%s temp=%.2f,hum=%.2f,press=%.2f,s0=%d,s1=%d,color=%s", 
+              cfg_node_id, temp, hum, pres, digitalRead(SW0_PIN), digitalRead(SW1_PIN), cfg_color);
+    Serial.print("> ");
+    Serial.println(mqttMsg);
+    mqttClient.publish(PUB_TOPIC, mqttMsg);
+  }
+
 }
