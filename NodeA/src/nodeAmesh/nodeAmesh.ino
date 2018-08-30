@@ -25,7 +25,7 @@
 
 #include <PubSubClient.h>
 
-#define MY_DEBUG 0
+#define MY_DEBUG 1
 
 #define NUM_LEDS 2
 #define DATA_PIN D5
@@ -34,7 +34,7 @@
 
 #define DEFAULT_MQTT_SERVER "mqttbroker"
 #define DEFAULT_NODE_ID "white"
-#define DEFAULT_COLOR "255,255,255"
+#define DEFAULT_COLOR "1_1_1"
 
 #define SUB_TOPIC "/campus/feedback"
 #define PUB_TOPIC "/campus/nodeA"
@@ -64,7 +64,7 @@ long lastMsgMillis = 0;
 
 //          1         2         3         4         5         6         7         8         9         0         1         2
 // 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
-// /campus/nodeA/sensors node=12345678901234567890 temp=-xx.xx,hum=100.00,press=100000.00,s0=x,s1=x,color=xxx,xxx,xxx
+// sensors node=12345678901234567890 temp=-xx.xx,hum=100.00,press=100000.00,s0=x,s1=x,color=xxx_xxx_xxx
 #define MQTT_MSG_LEN 120
 char mqttMsg[MQTT_MSG_LEN];
 
@@ -127,13 +127,19 @@ void runConfig() {
     WiFiManager wifiManager;
     wifiManager.setDebugOutput(false);
 
-    // id/name, placeholder/prompt, default, length
-    WiFiManagerParameter custom_mqtt_server("srv", "mqtt server", cfg_mqtt_server, 40);
-    WiFiManagerParameter custom_node_id("nid", "node id", cfg_node_id, 20);
-    WiFiManagerParameter custom_color("color", "color", cfg_color, 12);
-
+    WiFiManagerParameter labelMQTT("<label for=\"srv\">MQTT broker (hostname or ip)</label>");
+    wifiManager.addParameter(&labelMQTT);
+    WiFiManagerParameter custom_mqtt_server("srv", "mqtt broker", cfg_mqtt_server, 40);
     wifiManager.addParameter(&custom_mqtt_server);
+
+    WiFiManagerParameter labelID("<label for=\"nid\">Node Id</label>");
+    wifiManager.addParameter(&labelID);
+    WiFiManagerParameter custom_node_id("nid", "node id", cfg_node_id, 20);
     wifiManager.addParameter(&custom_node_id);
+    
+    WiFiManagerParameter labelColor("<label for=\"color\">Color (xxx_xxx_xxx)</label>");
+    wifiManager.addParameter(&labelColor);
+    WiFiManagerParameter custom_color("color", "color", cfg_color, 12);
     wifiManager.addParameter(&custom_color);
     
     // set config save notify callback
@@ -208,7 +214,7 @@ void setupBME() {
 
 int splitColorString(char* color, char* buf) {
   int idx = 0;
-  while ((color[idx] != ',') && (color[idx] != '\0')) {
+  while ((color[idx] != '_') && (color[idx] != '\0')) {
     buf[idx] = color[idx];
     ++idx;
   }
@@ -258,7 +264,7 @@ void setup() {
 
     runConfig();
 
-    // will not reach this line - restart of Raspi is forced in runConfig() !!!
+    // will not reach this line - restart of ESP8266 is forced in runConfig() !!!
   }
   
   parseRGB(cfg_color, &leds[0]);
