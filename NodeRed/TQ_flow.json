@@ -534,7 +534,7 @@
         "type": "debug",
         "z": "b98d52fa.23d1",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -556,6 +556,79 @@
         "x": 420,
         "y": 280,
         "wires": []
+    },
+    {
+        "id": "998290e.df46b7",
+        "type": "ui_colour_picker",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "label": "Color",
+        "group": "e81cc2ef.6904",
+        "format": "rgb",
+        "outformat": "string",
+        "showSwatch": true,
+        "showPicker": false,
+        "showValue": false,
+        "showHue": true,
+        "showAlpha": false,
+        "showLightness": true,
+        "dynOutput": "false",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "topic": "",
+        "x": 810,
+        "y": 960,
+        "wires": [
+            [
+                "e2c41e82.a197b"
+            ]
+        ]
+    },
+    {
+        "id": "e7c9c83f.b84f88",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1060,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "ea2082a8.af791",
+        "type": "mqtt out",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "topic": "/campus/feedback",
+        "qos": "",
+        "retain": "",
+        "broker": "fd07f60e.ed2ec8",
+        "x": 1070,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "e2c41e82.a197b",
+        "type": "function",
+        "z": "b98d52fa.23d1",
+        "name": "convert",
+        "func": "// rgb(xx, xx, xx)\n\nvar c = msg.payload.split(\"(\")[1].split(\")\")[0].split(\",\")\n\nreturn { payload: \"0=\" + c[0].trim() + \"_\" + c[1].trim() + \"_\" + c[2].trim()};",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 940,
+        "y": 1060,
+        "wires": [
+            [
+                "ea2082a8.af791",
+                "e7c9c83f.b84f88"
+            ]
+        ]
     },
     {
         "id": "fd07f60e.ed2ec8",
@@ -583,6 +656,16 @@
         "type": "ui_group",
         "z": "",
         "name": "Sensoren",
+        "tab": "8a9f4bc2.ebab48",
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "e81cc2ef.6904",
+        "type": "ui_group",
+        "z": "",
+        "name": "Aktoren",
         "tab": "8a9f4bc2.ebab48",
         "disp": true,
         "width": "6",
