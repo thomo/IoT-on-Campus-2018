@@ -1,1 +1,598 @@
-﻿[{"id":"82d0faa6.c8e6c8","type":"tab","label":"TQ","disabled":false,"info":""},{"id":"6b65d886.055598","type":"mqtt in","z":"82d0faa6.c8e6c8","name":"","topic":"/campus/nodeA","qos":"2","broker":"619c8a02.ac3e04","x":160,"y":120,"wires":[["49e6a52f.9c552c"]]},{"id":"91161b30.155398","type":"mqtt out","z":"82d0faa6.c8e6c8","name":"","topic":"/campus/feedback","qos":"","retain":"","broker":"619c8a02.ac3e04","x":690,"y":740,"wires":[]},{"id":"8135cd03.f69ae","type":"inject","z":"82d0faa6.c8e6c8","name":"","topic":"","payload":"node=nodeA1 temp=25.3,hum=60.00,press=101300.00,s0=1,s1=1,color=255_128_0","payloadType":"str","repeat":"","crontab":"","once":false,"onceDelay":0.1,"x":150,"y":40,"wires":[["49e6a52f.9c552c","86b633c.74608d","11b7eac9.c5bb85","d3386015.ca218","3744d400.c61aac"]]},{"id":"49e6a52f.9c552c","type":"function","z":"82d0faa6.c8e6c8","name":"","func":"// node=12345678901234567890 temp=-xx.xx,hum=100.00,press=100000.00,s0=x,s1=x,color=xxx,xxx,xxx\nvar nodeName = { payload: msg.payload.split(' ')[0].split('=')[1] };\nvar temp = { payload: msg.payload.split(' ')[1].split(',')[0].split('=')[1] };\nvar hum = { payload: msg.payload.split(' ')[1].split(',')[1].split('=')[1] };\nvar press = { payload: msg.payload.split(' ')[1].split(',')[2].split('=')[1] };\nvar s0 = { payload: msg.payload.split(' ')[1].split(',')[3].split('=')[1] };\nvar s1 = { payload: msg.payload.split(' ')[1].split(',')[4].split('=')[1] };\nvar col = { payload: msg.payload.split(' ')[1].split(',')[5].split('=')[1] };\nvar r = { payload: col.payload.split('_')[0]};\nvar g = { payload: col.payload.split('_')[1]};\nvar b = { payload: col.payload.split('_')[2]};\n\nreturn [nodeName, temp, hum, press, s0, s1, col, r, g, b];","outputs":10,"noerr":0,"x":390,"y":120,"wires":[["42faf6f7.74c428"],["bd507b79.c005d8","1bb24723.4e1639"],["8de401e2.e3ffa","a57b8183.e3063"],["3ec15318.4795dc","b72f5ef2.38204"],["5f02c3a2.5244dc"],["2c8c9066.48677"],["92cd484.b0ff8b8"],["57074cd3.205964"],["10c7638b.c5d4cc"],["b857c7fc.d8e8a8"]]},{"id":"42faf6f7.74c428","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":60,"wires":[]},{"id":"bd507b79.c005d8","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":140,"wires":[]},{"id":"8de401e2.e3ffa","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":220,"wires":[]},{"id":"3ec15318.4795dc","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":300,"wires":[]},{"id":"5f02c3a2.5244dc","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":380,"wires":[]},{"id":"2c8c9066.48677","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":460,"wires":[]},{"id":"92cd484.b0ff8b8","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":540,"wires":[]},{"id":"57074cd3.205964","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":620,"wires":[]},{"id":"10c7638b.c5d4cc","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":700,"wires":[]},{"id":"b857c7fc.d8e8a8","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":false,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":1090,"y":780,"wires":[]},{"id":"86b633c.74608d","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":390,"y":420,"wires":[]},{"id":"11b7eac9.c5bb85","type":"function","z":"82d0faa6.c8e6c8","name":"Count Btn1, set ColorString","func":"var s1 = msg.payload.split(' ')[1].split(',')[4].split('=')[1];\nvar m;\n\nif (s1 == \"0\") {\n    var col = { payload: msg.payload.split(' ')[1].split(',')[5].split('=')[1] };\n    var r = col.payload.split('_')[0];\n    var g = col.payload.split('_')[1];\n    var b = col.payload.split('_')[2];\n    m = { payload: \"1=\" + r + \",\" + g + \",\" + b };\n}\n\nreturn m;","outputs":1,"noerr":0,"x":440,"y":700,"wires":[["91161b30.155398","984e667c.0537d8"]]},{"id":"1bb24723.4e1639","type":"ui_gauge","z":"82d0faa6.c8e6c8","name":"","group":"742a07cc.7c3878","order":0,"width":0,"height":0,"gtype":"gage","title":"Temperatur","label":"°C","format":"{{value}}","min":"-10","max":"40","colors":["#0000ff","#0de401","#ca3838"],"seg1":"","seg2":"","x":1090,"y":180,"wires":[]},{"id":"a57b8183.e3063","type":"ui_gauge","z":"82d0faa6.c8e6c8","name":"","group":"742a07cc.7c3878","order":0,"width":0,"height":0,"gtype":"gage","title":"Luftfeuchtigkeit","label":"%","format":"{{value}}","min":"0","max":"100","colors":["#ff0006","#0de401","#ff0202"],"seg1":"","seg2":"","x":1100,"y":260,"wires":[]},{"id":"b72f5ef2.38204","type":"ui_gauge","z":"82d0faa6.c8e6c8","name":"","group":"742a07cc.7c3878","order":0,"width":0,"height":0,"gtype":"gage","title":"Luftdruck","label":"Pa","format":"{{value}}","min":"90000","max":"110000","colors":["#ff0006","#0de401","#ff0202"],"seg1":"","seg2":"","x":1080,"y":340,"wires":[]},{"id":"b90fe216.472ba","type":"ui_gauge","z":"82d0faa6.c8e6c8","name":"","group":"742a07cc.7c3878","order":0,"width":0,"height":0,"gtype":"gage","title":"Anzahl Clicks Button 0","label":"Clicks","format":"{{value}}","min":"0","max":"10000","colors":["#ff0006","#ffff00","#00ff00"],"seg1":"","seg2":"","x":700,"y":640,"wires":[]},{"id":"539e8f86.21132","type":"ui_gauge","z":"82d0faa6.c8e6c8","name":"","group":"742a07cc.7c3878","order":0,"width":0,"height":0,"gtype":"gage","title":"Anzahl Clicks Button 1","label":"Clicks","format":"{{value}}","min":"0","max":"2000","colors":["#ff0006","#ffff00","#00ff00"],"seg1":"","seg2":"","x":700,"y":540,"wires":[]},{"id":"37cfd357.38f7bc","type":"mqtt in","z":"82d0faa6.c8e6c8","name":"","topic":"/campus/feedback","qos":"2","broker":"619c8a02.ac3e04","x":150,"y":980,"wires":[["f0332677.e0be08"]]},{"id":"f0332677.e0be08","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":400,"y":980,"wires":[]},{"id":"27c9d824.5f9028","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":670,"y":500,"wires":[]},{"id":"d3386015.ca218","type":"function","z":"82d0faa6.c8e6c8","name":"Click Counter B1","func":"var s1 = parseInt(msg.payload.split(' ')[1].split(',')[4].split('=')[1]);\nvar count = flow.get('Button1Click') || 0;\ncount += 1;\n\nif (s1 == 0) {\n    flow.set('Button1Click', count);\n}\n\nm = {payload : flow.get('Button1Click')};\nreturn m;","outputs":1,"noerr":0,"x":410,"y":500,"wires":[["27c9d824.5f9028","539e8f86.21132"]]},{"id":"f53dc02.00cdd4","type":"function","z":"82d0faa6.c8e6c8","name":"Click Counter B0","func":"var s0 = parseInt(msg.payload.split(' ')[1].split(',')[3].split('=')[1]);\nvar count = flow.get('Button0Click') || 0;\ncount += 1;\n\nif (s0 == 0) {\n    flow.set('Button0Click', count);\n}\n\nm = {payload : flow.get('Button0Click')};\nreturn m;","outputs":1,"noerr":0,"x":410,"y":600,"wires":[["ea181186.97582","b90fe216.472ba"]]},{"id":"ea181186.97582","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":670,"y":600,"wires":[]},{"id":"3744d400.c61aac","type":"function","z":"82d0faa6.c8e6c8","name":"Btn 0 send random color","func":"var s0 = parseInt(msg.payload.split(' ')[1].split(',')[3].split('=')[1]);\nvar nodeName = msg.payload.split(' ')[0].split('=')[1];\n\nif (s0 == 0) {\n    var r = Math.floor(Math.random() * 256);\n    var g = Math.floor(Math.random() * 256);\n    var b = Math.floor(Math.random() * 256);\n    var m = {payload : nodeName + \"=\" + r + \",\" + g + \",\" + b};\n    return m;\n}","outputs":1,"noerr":0,"x":430,"y":800,"wires":[["9897f82f.ac4c08","15f59620.9bd3fa"]]},{"id":"9897f82f.ac4c08","type":"mqtt out","z":"82d0faa6.c8e6c8","name":"","topic":"/campus/selfColor","qos":"","retain":"","broker":"619c8a02.ac3e04","x":690,"y":840,"wires":[]},{"id":"984e667c.0537d8","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":670,"y":700,"wires":[]},{"id":"15f59620.9bd3fa","type":"debug","z":"82d0faa6.c8e6c8","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","x":670,"y":800,"wires":[]},{"id":"619c8a02.ac3e04","type":"mqtt-broker","z":"","name":"HAP MQTT","broker":"localhost","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""},{"id":"742a07cc.7c3878","type":"ui_group","z":"","name":"Sensoren","tab":"9784406e.c8adf","disp":true,"width":"6","collapse":false},{"id":"9784406e.c8adf","type":"ui_tab","z":"","name":"TQ","icon":"dashboard"}]
+﻿[
+    {
+        "id": "b98d52fa.23d1",
+        "type": "tab",
+        "label": "TQ",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "449a6b3e.ff2084",
+        "type": "mqtt in",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "topic": "/campus/nodeA",
+        "qos": "2",
+        "broker": "fd07f60e.ed2ec8",
+        "x": 140,
+        "y": 140,
+        "wires": [
+            [
+                "a82942d6.adf2f",
+                "311c5ab9.8f3906",
+                "98f6f918.4026a8",
+                "d08e0981.082b98",
+                "e76fd4a2.0730e8",
+                "122389ef.8e0626"
+            ]
+        ]
+    },
+    {
+        "id": "fe87204e.bd579",
+        "type": "mqtt out",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "topic": "/campus/feedback",
+        "qos": "",
+        "retain": "",
+        "broker": "fd07f60e.ed2ec8",
+        "x": 690,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "fb88737a.aa3e4",
+        "type": "inject",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "topic": "",
+        "payload": "sensors,node=nodeA1 temp=25.3,hum=60.00,press=101300.00,s0=1,s1=1,color=255_128_0",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 150,
+        "y": 40,
+        "wires": [
+            [
+                "122389ef.8e0626"
+            ]
+        ]
+    },
+    {
+        "id": "122389ef.8e0626",
+        "type": "function",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "func": "// node=12345678901234567890 temp=-xx.xx,hum=100.00,press=100000.00,s0=x,s1=x,color=xxx,xxx,xxx\nvar nodeName = { payload: msg.payload.split(' ')[0].split('=')[1] };\nvar temp = { payload: msg.payload.split(' ')[1].split(',')[0].split('=')[1] };\nvar hum = { payload: msg.payload.split(' ')[1].split(',')[1].split('=')[1] };\nvar press = { payload: msg.payload.split(' ')[1].split(',')[2].split('=')[1] };\nvar s0 = { payload: msg.payload.split(' ')[1].split(',')[3].split('=')[1] };\nvar s1 = { payload: msg.payload.split(' ')[1].split(',')[4].split('=')[1] };\nvar col = { payload: msg.payload.split(' ')[1].split(',')[5].split('=')[1] };\nvar r = { payload: col.payload.split('_')[0]};\nvar g = { payload: col.payload.split('_')[1]};\nvar b = { payload: col.payload.split('_')[2]};\n\nreturn [nodeName, temp, hum, press, s0, s1, col, r, g, b];",
+        "outputs": 10,
+        "noerr": 0,
+        "x": 390,
+        "y": 120,
+        "wires": [
+            [
+                "62e6b99e.9413d8"
+            ],
+            [
+                "19215fc7.cd87b",
+                "19962730.f2f689"
+            ],
+            [
+                "176c03ba.da259c",
+                "d7d2cb2b.baa058"
+            ],
+            [
+                "1f291053.cb054",
+                "70ea055d.5dffdc"
+            ],
+            [
+                "1847285e.b1f5b8"
+            ],
+            [
+                "3bdfbf83.0a324"
+            ],
+            [
+                "5f90e685.d5c858"
+            ],
+            [
+                "1b14ca1e.47bcb6"
+            ],
+            [
+                "126d3eef.961801"
+            ],
+            [
+                "44ef3e9d.53ae6"
+            ]
+        ]
+    },
+    {
+        "id": "62e6b99e.9413d8",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "19215fc7.cd87b",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "176c03ba.da259c",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "1f291053.cb054",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "1847285e.b1f5b8",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "3bdfbf83.0a324",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "5f90e685.d5c858",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "1b14ca1e.47bcb6",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "126d3eef.961801",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "44ef3e9d.53ae6",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 1090,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "d08e0981.082b98",
+        "type": "function",
+        "z": "b98d52fa.23d1",
+        "name": "Count Btn1, set ColorString",
+        "func": "function tagValue(m, tag) {\n    return m.payload.split(' ')[1].split(',').find(function(element) {\n        return element.startsWith(tag+\"=\");\n    }).split('=')[1]\n} \n\nvar v = tagValue(msg, \"s1\");\n\nvar m;\n\nif (v == \"0\") {\n    m = { payload: \"1=\" + tagValue(msg, \"color\") };\n}\n\nreturn m;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 440,
+        "y": 700,
+        "wires": [
+            [
+                "fe87204e.bd579",
+                "cdb7c39e.f43dd"
+            ]
+        ]
+    },
+    {
+        "id": "19962730.f2f689",
+        "type": "ui_gauge",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "group": "a6f49339.38088",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Temperatur",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": "-10",
+        "max": "40",
+        "colors": [
+            "#0000ff",
+            "#0de401",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1090,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "d7d2cb2b.baa058",
+        "type": "ui_gauge",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "group": "a6f49339.38088",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Luftfeuchtigkeit",
+        "label": "%",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "100",
+        "colors": [
+            "#ff0006",
+            "#0de401",
+            "#ff0202"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1100,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "70ea055d.5dffdc",
+        "type": "ui_gauge",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "group": "a6f49339.38088",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Luftdruck",
+        "label": "Pa",
+        "format": "{{value}}",
+        "min": "90000",
+        "max": "110000",
+        "colors": [
+            "#ff0006",
+            "#0de401",
+            "#ff0202"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1080,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "c585d1a7.a5346",
+        "type": "ui_gauge",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "group": "a6f49339.38088",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Anzahl Clicks Button 0",
+        "label": "Clicks",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "10000",
+        "colors": [
+            "#ff0006",
+            "#ffff00",
+            "#00ff00"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 700,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "bf871e2a.4d074",
+        "type": "ui_gauge",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "group": "a6f49339.38088",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Anzahl Clicks Button 1",
+        "label": "Clicks",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "2000",
+        "colors": [
+            "#ff0006",
+            "#ffff00",
+            "#00ff00"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 700,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "7b5fc2f4.852e1c",
+        "type": "mqtt in",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "topic": "/campus/feedback",
+        "qos": "2",
+        "broker": "fd07f60e.ed2ec8",
+        "x": 150,
+        "y": 980,
+        "wires": [
+            [
+                "d973d4a7.b51368"
+            ]
+        ]
+    },
+    {
+        "id": "d973d4a7.b51368",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 400,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "68d2c0ae.82b8f",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 670,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "311c5ab9.8f3906",
+        "type": "function",
+        "z": "b98d52fa.23d1",
+        "name": "Click Counter B1",
+        "func": "function tagValue(m, tag) {\n    return m.payload.split(' ')[1].split(',').find(function(element) {\n        return element.startsWith(tag+\"=\");\n    }).split('=')[1]\n} \n\nvar tv = tagValue(msg, \"s1\");\n\nif (tv == 0) {\n    var count = flow.get('Button1Click') || 0;\n    count += 1;\n    flow.set('Button1Click', count);\n}\n\nm = {payload : flow.get('Button1Click') || 0};\nreturn m;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 410,
+        "y": 500,
+        "wires": [
+            [
+                "68d2c0ae.82b8f",
+                "bf871e2a.4d074"
+            ]
+        ]
+    },
+    {
+        "id": "98f6f918.4026a8",
+        "type": "function",
+        "z": "b98d52fa.23d1",
+        "name": "Click Counter B0",
+        "func": "function tagValue(m, tag) {\n    return m.payload.split(' ')[1].split(',').find(function(element) {\n        return element.startsWith(tag+\"=\");\n    }).split('=')[1]\n} \n\nvar tv = tagValue(msg, \"s0\");\n\nif (tv == 0) {\n    var count = flow.get('Button0Click') || 0;\n    count += 1;\n    flow.set('Button0Click', count);\n}\n\nm = {payload : flow.get('Button0Click') || 0};\nreturn m;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 410,
+        "y": 600,
+        "wires": [
+            [
+                "eecb660a.47e7d8",
+                "c585d1a7.a5346"
+            ]
+        ]
+    },
+    {
+        "id": "eecb660a.47e7d8",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 670,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "e76fd4a2.0730e8",
+        "type": "function",
+        "z": "b98d52fa.23d1",
+        "name": "Btn 0 send random color",
+        "func": "function tagValue(m, tag) {\n    return m.payload.split(' ')[1].split(',').find(function(element) {\n        return element.startsWith(tag+\"=\");\n    }).split('=')[1]\n} \n\nvar s0 = tagValue(msg, \"s0\");\n\nvar nodeName = \"0\"; //msg.payload.split(' ')[0].split('=')[1];\n\nif (s0 == 0) {\n    var r = Math.floor(Math.random() * 256);\n    var g = Math.floor(Math.random() * 256);\n    var b = Math.floor(Math.random() * 256);\n    var m = {payload : nodeName + \"=\" + r + \"_\" + g + \"_\" + b};\n    return m;\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 430,
+        "y": 800,
+        "wires": [
+            [
+                "2662fb5f.e20dd4",
+                "cec26f6.f7c649"
+            ]
+        ]
+    },
+    {
+        "id": "2662fb5f.e20dd4",
+        "type": "mqtt out",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "topic": "/campus/feedback",
+        "qos": "",
+        "retain": "",
+        "broker": "fd07f60e.ed2ec8",
+        "x": 690,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "cdb7c39e.f43dd",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 670,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "cec26f6.f7c649",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 670,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "a82942d6.adf2f",
+        "type": "debug",
+        "z": "b98d52fa.23d1",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 420,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "fd07f60e.ed2ec8",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "HAP MQTT",
+        "broker": "10.0.0.142",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "a6f49339.38088",
+        "type": "ui_group",
+        "z": "",
+        "name": "Sensoren",
+        "tab": "8a9f4bc2.ebab48",
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "8a9f4bc2.ebab48",
+        "type": "ui_tab",
+        "z": "",
+        "name": "TQ",
+        "icon": "dashboard"
+    }
+]
