@@ -25,12 +25,14 @@
 
 #include <PubSubClient.h>
 
-#define MY_DEBUG 1
+#define MY_DEBUG  1
 
-#define NUM_LEDS 2
-#define DATA_PIN D5
-#define SW0_PIN D6
-#define SW1_PIN D7
+#define NUM_LEDS  2
+#define LEFT_LED  1
+#define RIGHT_LED 0
+#define DATA_PIN  D5
+#define SW0_PIN   D6
+#define SW1_PIN   D7
 
 #define DEFAULT_MQTT_SERVER "mqttbroker"
 #define DEFAULT_NODE_ID "white"
@@ -40,6 +42,8 @@
 #define PUB_TOPIC "/campus/nodeA"
 #define PUB_BTN0STATE "/campus/Button0"
 #define PUB_BTN1STATE "/campus/Button1"
+#define PUB_RATING "/campus/rating"
+#define SUB_MODE "/campus/modus"
 
 const char* mqtt_user = "tq";
 const char* mqtt_password = "campus2018";
@@ -52,8 +56,9 @@ BME280I2C bme;
 CRGB leds[NUM_LEDS];
 
 const CRGB LED_OFF  = CRGB(0,0,0);
-const CRGB LED_RED  = CRGB(255,0,0);
-const CRGB LED_BLUE = CRGB(0,0,255);
+const CRGB LED_RED  = CRGB(181,0,0);
+const CRGB LED_GREEN = CRGB(0,181,0);
+const CRGB LED_BLUE = CRGB(0,0,181);
 
 char cfg_node_id[20];
 char cfg_mqtt_server[40];
@@ -61,6 +66,10 @@ char cfg_color[12];
 
 //flag for saving data
 bool shouldSaveConfig = false;
+
+// node mode: '0': normal mode, '1': rating mode
+char node_mode = '0';
+bool modeChanged = false;
 
 long lastMsgMillis = 0;
 
@@ -194,8 +203,7 @@ void setupWiFi() {
   Serial.println("----- ----- -----");
 }
 
-void setupMQTT()
-{
+void setupMQTT(){
   Serial.println("Start MQTT Setup");
   mqttClient.setServer(cfg_mqtt_server, 1883);
   mqttClient.setCallback(mqttCallback);
@@ -292,6 +300,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     Serial.println();
   }
 
+  // INCOMING: /campus/modus
+  if (strcmp(topic, SUB_MODE) == 0) {
+    if ((char)payload[0] == '0' || (char)payload[0] == '1') {
+      if (node_mode != (char)payload[0]){
+        modeChanged = true;
+        node_mode = (char)payload[0];
+      }
+    }
+  }
+
 // incoming payload: nodeName=rrr_ggg_bbb
   
   if (strcmp(topic,SUB_TOPIC)==0) {
@@ -320,12 +338,16 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     
     node[j]='\0';
 
+    // wenn NODE=R_G_B -> LED 1
+    // wenn 1=R_G_B -> LED 0
+
     if (strcmp(node, cfg_node_id) == 0) {
-      int idx = 1;
-      if (payload[0] == '1') idx = 0;
-      
-      parseRGB(cbuf, &leds[idx]);
+      parseRGB(cbuf, &leds[LEFT_LED]);
       FastLED.show();
+  }
+    else if (payload[0] == '1') {
+      parseRGB(cbuf, &leds[RIGHT_LED]);
+    FastLED.show();
     }
   }
 }
@@ -340,6 +362,7 @@ void mqttReconnect() {
     if (mqttClient.connect(WiFi.macAddress().c_str(), mqtt_user, mqtt_password)) {
       Serial.println("connected");
       mqttClient.subscribe(SUB_TOPIC);
+      mqttClient.subscribe(SUB_MODE);
     } else {
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
@@ -353,13 +376,8 @@ int btn0State = HIGH;
 int btn1State = HIGH;
 int lastClickMillis = 0;
 
-void loop(void) {
-  if (!mqttClient.connected()) {
-    mqttReconnect();
-  }
-  mqttClient.loop();
-  long now = millis();
-
+void normalMode() {
+  long now = millis();  
   if (now - lastClickMillis > 75) {
     lastClickMillis = now;
     
@@ -389,7 +407,67 @@ void loop(void) {
       btn1State = HIGH;
     }
   }
+}
 
+int numClicks = 0;
+
+void ratingMode() {
+  long now = millis();
+  bool ratingSend = false;
+  
+  if (now - lastClickMillis > 75) {
+    lastClickMillis = now;
+    
+    int currentBtn0State = digitalRead(SW0_PIN);
+
+    if (currentBtn0State == LOW && btn0State == HIGH && numClicks < 3) {
+      numClicks++;
+      btn0State = LOW;
+      Serial.println("Button 0 pressed");
+      snprintf (mqttButtonMsg, MQTT_BTN_LEN, "%s#%d#%s", cfg_node_id, btn0State, cfg_color);
+      mqttClient.publish(PUB_RATING, "0");
+      ratingSend = true;
+    }
+    else if (currentBtn0State == HIGH && btn0State == LOW) {
+      Serial.println("Button 0 released");
+      btn0State = HIGH;
+    }
+    
+    int currentBtn1State = digitalRead(SW1_PIN);
+  
+    if (currentBtn1State == LOW && btn1State == HIGH && numClicks < 3) {
+      numClicks++;
+      btn1State = LOW;
+      Serial.println("Button 1 pressed");
+      snprintf (mqttButtonMsg, MQTT_BTN_LEN, "%s#%d#%s", cfg_node_id, btn1State, cfg_color);
+      mqttClient.publish(PUB_RATING, "1");
+      ratingSend = true;
+    }
+    else if (currentBtn1State == HIGH && btn1State == LOW) {
+      Serial.println("Button 1 released");
+      btn1State = HIGH;
+    }
+
+    if (ratingSend) {
+      if (numClicks == 1) {
+        leds[LEFT_LED] = LED_GREEN;
+        leds[RIGHT_LED] = LED_OFF;
+      }
+      else if (numClicks == 2) {
+        leds[LEFT_LED] = LED_GREEN;
+        leds[RIGHT_LED] = LED_GREEN;
+      }
+      else if (numClicks == 3) {
+        leds[LEFT_LED] = LED_RED;
+        leds[RIGHT_LED] = LED_RED;
+      }
+      FastLED.show();
+    }
+  }
+}
+
+void publishSensorData() {
+  long now = millis();
   if (now - lastMsgMillis > 2000) {
     lastMsgMillis = now;
 
@@ -411,5 +489,37 @@ void loop(void) {
     }
     mqttClient.publish(PUB_TOPIC, mqttMsg);
   }
+}
 
+void loop(void) {
+  if (!mqttClient.connected()) {
+    mqttReconnect();
+  }
+  mqttClient.loop();
+  publishSensorData();
+
+  if (modeChanged) {
+    numClicks = 0;
+    modeChanged = false;
+    leds[0] = LED_RED;
+    leds[1] = LED_OFF;
+    FastLED.show();
+    delay(250);
+    leds[1] = LED_BLUE;
+    FastLED.show();
+    delay(250);
+    leds[0] = LED_OFF;
+    leds[1] = LED_OFF;
+    FastLED.show();
+  }
+  
+  if (node_mode == '0') {
+    normalMode();
+  }
+  else if (node_mode == '1') {
+    ratingMode();
+  }
+  else {
+    Serial.println("Unknown mode!");
+  }
 }
