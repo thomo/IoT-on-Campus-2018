@@ -410,7 +410,7 @@ void publishSensorData() {
     bme.read(pres, temp, hum, tempUnit, presUnit);
     
     snprintf (mqttMsg, MQTT_MSG_LEN, 
-              "sensors,node=%s temp=%.2f,hum=%.2f,press=%.2f,s0=%d,s1=%d,color=%s", 
+              "sensors,node=%s temp=%.2f,hum=%.2f,press=%.2f,s0=%d,s1=%d,color=\"%s\"", 
               cfg_node_id, temp, hum, pres, digitalRead(SW0_PIN), digitalRead(SW1_PIN), cfg_color);
     if (MY_DEBUG) {
       Serial.print("> [");
