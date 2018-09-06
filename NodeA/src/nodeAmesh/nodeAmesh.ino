@@ -36,8 +36,8 @@
 #define DEFAULT_NODE_ID "white"
 #define DEFAULT_COLOR "1_1_1"
 
-#define SUB_TOPIC "/campus/feedback"
-#define PUB_TOPIC "/campus/nodeA"
+#define SUB_TOPIC "campus/feedback"
+#define PUB_TOPIC "campus/nodeA"
 
 const char* mqtt_user = "tq";
 const char* mqtt_password = "campus2018";

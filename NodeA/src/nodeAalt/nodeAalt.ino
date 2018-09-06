@@ -38,12 +38,12 @@
 #define DEFAULT_NODE_ID "white"
 #define DEFAULT_COLOR "1_1_1"
 
-#define SUB_TOPIC "/campus/feedback"
-#define PUB_TOPIC "/campus/nodeA"
-#define PUB_BTN0STATE "/campus/Button0"
-#define PUB_BTN1STATE "/campus/Button1"
-#define PUB_RATING "/campus/rating"
-#define SUB_MODE "/campus/modus"
+#define SUB_TOPIC "campus/feedback"
+#define PUB_TOPIC "campus/nodeA"
+#define PUB_BTN0STATE "campus/Button0"
+#define PUB_BTN1STATE "campus/Button1"
+#define PUB_RATING "campus/rating"
+#define SUB_MODE "campus/modus"
 
 const char* mqtt_user = "tq";
 const char* mqtt_password = "campus2018";
