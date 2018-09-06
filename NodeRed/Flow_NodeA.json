@@ -1,0 +1,485 @@
+[
+    {
+        "id": "fb1077e3.08f558",
+        "type": "mqtt in",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "topic": "campus/Button1",
+        "qos": "2",
+        "broker": "a269ef78.ff7fc",
+        "x": 100,
+        "y": 420,
+        "wires": [
+            [
+                "f74023e0.381f9",
+                "85be2685.dc9ec8",
+                "719e852c.7343ec"
+            ]
+        ]
+    },
+    {
+        "id": "df531aa4.ea2528",
+        "type": "ui_gauge",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "group": "416a767c.6b8508",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Positive Bewertungen",
+        "label": "Punkte",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "10",
+        "colors": [
+            "#ca3838",
+            "#e6e600",
+            "#00b500"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 820,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "f74023e0.381f9",
+        "type": "function",
+        "z": "bf589f10.6ef0e",
+        "name": "Count all ratings",
+        "func": "var x = parseInt(flow.get(\"BewertungenGesamt\"));\nflow.set(\"BewertungenGesamt\", x+1);\nvar m = {payload: flow.get(\"BewertungenGesamt\")};\nreturn m;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 380,
+        "y": 240,
+        "wires": [
+            [
+                "36a10f6a.c65de"
+            ]
+        ]
+    },
+    {
+        "id": "36a10f6a.c65de",
+        "type": "ui_gauge",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "group": "416a767c.6b8508",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Bewertungen gesamt",
+        "label": "Punkte",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "1000",
+        "colors": [
+            "#ca3838",
+            "#e6e600",
+            "#00b500"
+        ],
+        "seg1": "250",
+        "seg2": "500",
+        "x": 640,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "85be2685.dc9ec8",
+        "type": "debug",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 310,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "fc2e54db.310fb8",
+        "type": "debug",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 790,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "719e852c.7343ec",
+        "type": "function",
+        "z": "bf589f10.6ef0e",
+        "name": "plus",
+        "func": "var x = (parseInt(flow.get(\"Bewertung\")) || 0) +1;\n\nif (x > 10) x = 10;\n\nflow.set(\"Bewertung\", x);\nreturn {payload: [flow.get(\"Bewertung\"), msg.payload.split('#')[0]]};",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 350,
+        "y": 440,
+        "wires": [
+            [
+                "96e226cb.21dc58",
+                "95bf522f.4eb7f"
+            ]
+        ]
+    },
+    {
+        "id": "38803880.e8fa68",
+        "type": "mqtt in",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "topic": "campus/Button0",
+        "qos": "2",
+        "broker": "a269ef78.ff7fc",
+        "x": 100,
+        "y": 620,
+        "wires": [
+            [
+                "b57fdde.d56d82",
+                "f74023e0.381f9"
+            ]
+        ]
+    },
+    {
+        "id": "b57fdde.d56d82",
+        "type": "function",
+        "z": "bf589f10.6ef0e",
+        "name": "minus",
+        "func": "var x = (parseInt(flow.get(\"Bewertung\")) || 0) -1;\n\nif ( x < 0) x = 0;\n\nflow.set(\"Bewertung\", x);\nreturn {payload:  [flow.get(\"Bewertung\"), msg.payload.split('#')[0]]};",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 330,
+        "y": 560,
+        "wires": [
+            [
+                "96e226cb.21dc58",
+                "95bf522f.4eb7f"
+            ]
+        ]
+    },
+    {
+        "id": "96e226cb.21dc58",
+        "type": "function",
+        "z": "bf589f10.6ef0e",
+        "name": "bewertung to color",
+        "func": "var x = parseInt(flow.get(\"Bewertung\"));\n\nvar percentColors = [\n    { pct: 0.0, color: { r: 0xff, g: 0x00, b: 0 } },\n    { pct: 0.5, color: { r: 0xff, g: 0xff, b: 0 } },\n    { pct: 1.0, color: { r: 0x00, g: 0xff, b: 0 } } ];\n\nvar getColorForPercentage = function(pct) {\n    for (var i = 1; i < percentColors.length - 1; i++) {\n        if (pct < percentColors[i].pct) {\n            break;\n        }\n    }\n    var lower = percentColors[i - 1];\n    var upper = percentColors[i];\n    var range = upper.pct - lower.pct;\n    var rangePct = (pct - lower.pct) / range;\n    var pctLower = 1 - rangePct;\n    var pctUpper = rangePct;\n    var color = {\n        r: Math.floor(lower.color.r * pctLower + upper.color.r * pctUpper),\n        g: Math.floor(lower.color.g * pctLower + upper.color.g * pctUpper),\n        b: Math.floor(lower.color.b * pctLower + upper.color.b * pctUpper)\n    };\n    return [color.r, color.g, color.b].join('_');\n}  \n\nreturn { payload: [getColorForPercentage(x/10.0), msg.payload[1]] };",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 570,
+        "y": 600,
+        "wires": [
+            [
+                "fc2e54db.310fb8",
+                "4571ff51.c5b97",
+                "26577941.201c76"
+            ]
+        ]
+    },
+    {
+        "id": "207650a0.8e326",
+        "type": "mqtt out",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "topic": "campus/feedback",
+        "qos": "",
+        "retain": "",
+        "broker": "61cef01f.50d9",
+        "x": 1070,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "4571ff51.c5b97",
+        "type": "function",
+        "z": "bf589f10.6ef0e",
+        "name": "color with left led",
+        "func": "return { payload: 0 + \"=\" + msg.payload[0] };",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 830,
+        "y": 580,
+        "wires": [
+            [
+                "207650a0.8e326"
+            ]
+        ]
+    },
+    {
+        "id": "95bf522f.4eb7f",
+        "type": "function",
+        "z": "bf589f10.6ef0e",
+        "name": "arr[0]",
+        "func": "return { payload: msg.payload[0] };",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 590,
+        "y": 400,
+        "wires": [
+            [
+                "df531aa4.ea2528"
+            ]
+        ]
+    },
+    {
+        "id": "26577941.201c76",
+        "type": "function",
+        "z": "bf589f10.6ef0e",
+        "name": "color for node",
+        "func": "return { payload: msg.payload[1]+'='+msg.payload[0]};",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 820,
+        "y": 700,
+        "wires": [
+            [
+                "207650a0.8e326"
+            ]
+        ]
+    },
+    {
+        "id": "8c91446e.9f1368",
+        "type": "mqtt in",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "topic": "campus/nodeA",
+        "qos": "2",
+        "broker": "61cef01f.50d9",
+        "x": 160,
+        "y": 920,
+        "wires": [
+            [
+                "9ba16c28.74477",
+                "a98b8f9c.a1929"
+            ]
+        ]
+    },
+    {
+        "id": "6a03c82a.0f2388",
+        "type": "inject",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "topic": "",
+        "payload": "sensors,node=nodeA1 temp=25.3,hum=60.00,press=101300.00,s0=1,s1=1,color=255_128_0",
+        "payloadType": "str",
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "x": 170,
+        "y": 820,
+        "wires": [
+            [
+                "a98b8f9c.a1929"
+            ]
+        ]
+    },
+    {
+        "id": "a98b8f9c.a1929",
+        "type": "function",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "func": "// node=12345678901234567890 temp=-xx.xx,hum=100.00,press=100000.00,s0=x,s1=x,color=xxx,xxx,xxx\n//var nodeName = { payload: msg.payload.split(' ')[0].split('=')[1] };\nvar temp = { payload: msg.payload.split(' ')[1].split(',')[0].split('=')[1] };\nvar hum = { payload: msg.payload.split(' ')[1].split(',')[1].split('=')[1] };\nvar press = { payload: Math.round(msg.payload.split(' ')[1].split(',')[2].split('=')[1] / 100, 1) };\n//var s0 = { payload: msg.payload.split(' ')[1].split(',')[3].split('=')[1] };\n//var s1 = { payload: msg.payload.split(' ')[1].split(',')[4].split('=')[1] };\n//var col = { payload: msg.payload.split(' ')[1].split(',')[5].split('=')[1] };\n//var r = { payload: col.payload.split('_')[0]};\n//var g = { payload: col.payload.split('_')[1]};\n//var b = { payload: col.payload.split('_')[2]};\n\nreturn [temp, hum, press];",
+        "outputs": 3,
+        "noerr": 0,
+        "x": 410,
+        "y": 900,
+        "wires": [
+            [
+                "15a07eae.e69c31",
+                "d93da193.330cb"
+            ],
+            [
+                "15a07eae.e69c31",
+                "63399740.01c768"
+            ],
+            [
+                "15a07eae.e69c31",
+                "f2512516.1d88d8"
+            ]
+        ]
+    },
+    {
+        "id": "15a07eae.e69c31",
+        "type": "debug",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "x": 630,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "d93da193.330cb",
+        "type": "ui_gauge",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "group": "ddf56893.399c48",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Temperatur",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": "-10",
+        "max": "40",
+        "colors": [
+            "#0000ff",
+            "#0de401",
+            "#ca3838"
+        ],
+        "seg1": "10",
+        "seg2": "28",
+        "x": 630,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "63399740.01c768",
+        "type": "ui_gauge",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "group": "ddf56893.399c48",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Luftfeuchtigkeit",
+        "label": "%",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "100",
+        "colors": [
+            "#ff3434",
+            "#34ff34",
+            "#ff3434"
+        ],
+        "seg1": "40",
+        "seg2": "60",
+        "x": 640,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "f2512516.1d88d8",
+        "type": "ui_gauge",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "group": "ddf56893.399c48",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Luftdruck",
+        "label": "hPa",
+        "format": "{{value}}",
+        "min": "900",
+        "max": "1100",
+        "colors": [
+            "#ff3434",
+            "#0de401",
+            "#ff3434"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 620,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "9ba16c28.74477",
+        "type": "debug",
+        "z": "bf589f10.6ef0e",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "x": 440,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "a269ef78.ff7fc",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "HAP MQTT",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "416a767c.6b8508",
+        "type": "ui_group",
+        "z": "",
+        "name": "Bewertung",
+        "tab": "70963358.13b81c",
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "61cef01f.50d9",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "HAP MQTT",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "ddf56893.399c48",
+        "type": "ui_group",
+        "z": "",
+        "name": "Sensoren",
+        "tab": "70963358.13b81c",
+        "order": 2,
+        "disp": true,
+        "width": "6",
+        "collapse": false
+    },
+    {
+        "id": "70963358.13b81c",
+        "type": "ui_tab",
+        "z": "",
+        "name": "Dashboard",
+        "icon": "dashboard",
+        "order": 5
+    }
+]
