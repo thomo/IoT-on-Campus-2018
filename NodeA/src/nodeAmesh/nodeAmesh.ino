@@ -25,12 +25,14 @@
 
 #include <PubSubClient.h>
 
-#define MY_DEBUG 1
+#define MY_DEBUG  1
 
-#define NUM_LEDS 2
-#define DATA_PIN D5
-#define SW0_PIN D6
-#define SW1_PIN D7
+#define NUM_LEDS  2
+#define LEFT_LED  1
+#define RIGHT_LED 0
+#define DATA_PIN  D5
+#define SW0_PIN   D6
+#define SW1_PIN   D7
 
 #define DEFAULT_MQTT_SERVER "mqttbroker"
 #define DEFAULT_NODE_ID "white"
@@ -38,6 +40,8 @@
 
 #define SUB_TOPIC "campus/feedback"
 #define PUB_TOPIC "campus/nodeA"
+#define PUB_BTN0STATE "campus/Button0"
+#define PUB_BTN1STATE "campus/Button1"
 
 const char* mqtt_user = "tq";
 const char* mqtt_password = "campus2018";
@@ -50,8 +54,9 @@ BME280I2C bme;
 CRGB leds[NUM_LEDS];
 
 const CRGB LED_OFF  = CRGB(0,0,0);
-const CRGB LED_RED  = CRGB(255,0,0);
-const CRGB LED_BLUE = CRGB(0,0,255);
+const CRGB LED_RED  = CRGB(181,0,0);
+const CRGB LED_GREEN = CRGB(0,181,0);
+const CRGB LED_BLUE = CRGB(0,0,181);
 
 char cfg_node_id[20];
 char cfg_mqtt_server[40];
@@ -66,7 +71,9 @@ long lastMsgMillis = 0;
 // 123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890
 // sensors node=12345678901234567890 temp=-xx.xx,hum=100.00,press=100000.00,s0=x,s1=x,color=xxx_xxx_xxx
 #define MQTT_MSG_LEN 120
+#define MQTT_BTN_LEN 22
 char mqttMsg[MQTT_MSG_LEN];
+char mqttButtonMsg[MQTT_BTN_LEN];
 
 // ------------------------------------------------------
 
@@ -190,8 +197,7 @@ void setupWiFi() {
   Serial.println("----- ----- -----");
 }
 
-void setupMQTT()
-{
+void setupMQTT() {
   Serial.println("Start MQTT Setup");
   mqttClient.setServer(cfg_mqtt_server, 1883);
   mqttClient.setCallback(mqttCallback);
@@ -287,19 +293,51 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     }
     Serial.println();
   }
+
+  // incoming payload: nodeName=rrr_ggg_bbb or x=rrr_ggg_bbb  (x=0 or x=1)
   
   if (strcmp(topic,SUB_TOPIC)==0) {
     // content contains color of led 0 and led 1
     // adjust the color of leds accordingly
+
+    // get node name length and color length
+    char* pos = strstr((char*)payload, "=");    
+    int nodeNameLength = 0;
+    nodeNameLength = pos - (char*)payload;
+    int colorLength = length - nodeNameLength - 1;
+
+    pos++;
     char cbuf[12];
-    strncpy(cbuf, &((char *)payload)[2], 12);
-    cbuf[min(11U,length-2)] = '\0';
+    strncpy(cbuf, pos, colorLength);
+    cbuf[min(11U,length-nodeNameLength-1)] = '\0';
+    Serial.print("cbuf=");
+    Serial.println(cbuf);
+    char node[20];
+    int j = 0;
+
+    for (int i = 0; i < length; i++) {
+      if (payload[i] == '=') break;
+      node[j++] = payload[i];
+    }
     
-    int idx = 1;
-    if (payload[0] == '1') idx = 0;
-    
-    parseRGB(cbuf, &leds[idx]);
-    FastLED.show();
+    node[j]='\0';
+
+    // if NODE=R_G_B -> LED 0 and LED 1
+    // if x=R_G_B -> LED 0 or LED 1
+
+    if (strcmp(node, cfg_node_id) == 0) {
+      parseRGB(cbuf, &leds[LEFT_LED]);
+      parseRGB(cbuf, &leds[RIGHT_LED]);
+      FastLED.show();
+    }
+    else if (payload[0] == '0') {
+      parseRGB(cbuf, &leds[LEFT_LED]);
+      FastLED.show();
+    }
+    else if (payload[0] == '1') {
+      parseRGB(cbuf, &leds[RIGHT_LED]);
+      FastLED.show();
+    }
   }
 }
 
@@ -322,12 +360,44 @@ void mqttReconnect() {
   }
 }
 
-void loop(void) {
-  if (!mqttClient.connected()) {
-    mqttReconnect();
-  }
-  mqttClient.loop();
+int btn0State = HIGH;
+int btn1State = HIGH;
+int lastClickMillis = 0;
 
+void publishButtonState() {
+  long now = millis();  
+  if (now - lastClickMillis > 75) {
+    lastClickMillis = now;
+    
+    int currentBtn0State = digitalRead(SW0_PIN);
+
+    if (currentBtn0State == LOW && btn0State == HIGH) {
+      btn0State = LOW;
+      Serial.println("Button 0 pressed");
+      snprintf (mqttButtonMsg, MQTT_BTN_LEN, "%s#%d#%s", cfg_node_id, btn0State, cfg_color);
+      mqttClient.publish(PUB_BTN0STATE, mqttButtonMsg);
+    }
+    else if (currentBtn0State == HIGH && btn0State == LOW) {
+      Serial.println("Button 0 released");
+      btn0State = HIGH;
+    }
+    
+    int currentBtn1State = digitalRead(SW1_PIN);
+  
+    if (currentBtn1State == LOW && btn1State == HIGH) {
+      btn1State = LOW;
+      Serial.println("Button 1 pressed");
+      snprintf (mqttButtonMsg, MQTT_BTN_LEN, "%s#%d#%s", cfg_node_id, btn1State, cfg_color);
+      mqttClient.publish(PUB_BTN1STATE, mqttButtonMsg);
+    }
+    else if (currentBtn1State == HIGH && btn1State == LOW) {
+      Serial.println("Button 1 released");
+      btn1State = HIGH;
+    }
+  }
+}
+
+void publishSensorData() {
   long now = millis();
   if (now - lastMsgMillis > 2000) {
     lastMsgMillis = now;
@@ -350,5 +420,13 @@ void loop(void) {
     }
     mqttClient.publish(PUB_TOPIC, mqttMsg);
   }
+}
 
+void loop(void) {
+  if (!mqttClient.connected()) {
+    mqttReconnect();
+  }
+  mqttClient.loop();
+  publishSensorData();
+  publishButtonState();
 }
